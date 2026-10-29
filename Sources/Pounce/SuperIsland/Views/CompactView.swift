@@ -116,7 +116,9 @@ struct CompactView: View {
 
     private var defaultBrandCompactView: some View {
         HStack(spacing: 6) {
-            NotchMascotView(size: 20)
+            Image(systemName: "bolt.horizontal.circle.fill")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
             Text("Edit.or.lynx")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(.white.opacity(0.88))

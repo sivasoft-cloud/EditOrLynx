@@ -1,3 +1,16 @@
+# Purge Legacy Notch Bloat & Keep Pure Notchy Implementation (v2.0.1)
+*Published: 2026-10-29 11:06:23*
+
+Deleted all old obsolete notch, mascot, and legacy island code files. Kept purely Notchy.app Apple G2 squircle geometry (TopAttachedNotchShape), subpixel NotchGeometry, authentic liquid glass materials, and Notchy card-based settings architecture.
+
+### Highlights in this Release:
+- **Pure Notchy G2 Squircle Geometry**: Full G2 continuous curvature (R * 1.28 extent, 0.44R and 0.82R control points) and outward top ear flairs.
+- **Liquid Glass Materials**: Support for both Dark Mode (.liquidGlass, .matteDark, .trueBlack) and Light Mode (.liquidLight, .matteLight) with dynamic specular highlights and razor rim strokes.
+- **Card-Based Settings System**: High-density grouped cards with custom toggles, sliders, menus, and dedicated Downloader pane.
+- **Continuous 120 BPM Motion Engine**: 1440x1440 analytical spring-driven UI morph across 12 distinct UI states with 4x subframe motion blur at 60fps.
+- **Performance Optimization**: <1% idle CPU utilization through paused timers and compositor-driven rendering.
+
+---
 # Edit.or.lynx v2.0.1 Release (v2.0.1)
 *Published: 2026-10-29 10:53:39*
 

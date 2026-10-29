@@ -15,15 +15,17 @@ public enum NotchMaterialVariant: String, CaseIterable, Identifiable {
         self == .liquidLight || self == .matteLight
     }
 
-    public var title: String {
+    public var displayName: String {
         switch self {
         case .liquidGlass: return "Liquid Glass (Dark)"
         case .matteDark:   return "Matte Dark"
-        case .trueBlack:   return "True Black"
+        case .trueBlack:   return "True OLED Black"
         case .liquidLight: return "Liquid Glass (Light)"
         case .matteLight:  return "Matte Light"
         }
     }
+
+    public var title: String { displayName }
 
     public var subtitle: String {
         switch self {
@@ -35,6 +37,8 @@ public enum NotchMaterialVariant: String, CaseIterable, Identifiable {
         }
     }
 }
+
+public typealias NotchyGlassVariant = NotchMaterialVariant
 
 /// Native macOS Visual Effect wrapper for clean translucent materials
 public struct VisualEffectView: NSViewRepresentable {

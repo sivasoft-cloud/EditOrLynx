@@ -1,93 +1,8 @@
 import AppKit
 import SwiftUI
 
-private struct MascotGridPicker: View {
-    @ObservedObject private var manager = MascotManager.shared
-    @State private var downloadingSlug: String?
-
-    private let columns = [GridItem(.adaptive(minimum: 100, maximum: 120), spacing: 8)]
-
-    var body: some View {
-        LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(manager.availableMascots) { entry in
-                mascotCell(entry)
-            }
-        }
-    }
-
-    private func mascotCell(_ entry: MascotCatalogEntry) -> some View {
-        let isSelected = manager.selectedSlug == entry.slug
-        let isDownloaded = manager.isMascotDownloaded(entry.slug)
-        let isDownloading = downloadingSlug == entry.slug
-
-        return Button {
-            guard !isDownloading else { return }
-            if isDownloaded {
-                manager.selectMascot(entry.slug)
-            } else {
-                downloadingSlug = entry.slug
-                Task {
-                    let didDownload = await manager.downloadMascot(entry.slug)
-                    downloadingSlug = nil
-                    if didDownload {
-                        manager.selectMascot(entry.slug)
-                    }
-                }
-            }
-        } label: {
-            VStack(spacing: 4) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(isSelected ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.04))
-                        .frame(height: 80)
-
-                    AsyncImage(url: URL(string: entry.thumbnailURL)) { image in
-                        image.resizable().scaledToFit()
-                    } placeholder: {
-                        ProgressView().controlSize(.small)
-                    }
-                    .frame(width: 60, height: 60)
-
-                    if !isDownloaded {
-                        VStack {
-                            Spacer()
-                            HStack {
-                                Spacer()
-                                if isDownloading {
-                                    ProgressView()
-                                        .controlSize(.mini)
-                                        .padding(4)
-                                } else {
-                                    Image(systemName: "arrow.down.circle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.accentColor)
-                                        .padding(4)
-                                }
-                            }
-                        }
-                        .frame(height: 80)
-                    }
-                }
-
-                Text(entry.name)
-                    .font(.caption)
-                    .foregroundColor(isSelected ? .accentColor : .primary)
-                    .lineLimit(1)
-            }
-        }
-        .buttonStyle(.plain)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
-                .frame(height: 80)
-                .offset(y: -10)
-        )
-    }
-}
-
 struct GeneralSettingsView: View {
     @EnvironmentObject var appState: AppState
-    @ObservedObject private var mascotManager = MascotManager.shared
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var permissionStates: [PermissionType: Bool] = [:]
 
@@ -263,24 +178,6 @@ struct GeneralSettingsView: View {
                     description: "Connected device notifications")
             }
 
-            // Mascot
-            SettingSectionLabel(title: "Mascot")
-            SettingGroup {
-                MascotGridPicker()
-                    .padding(14)
-
-                if let loadError = mascotManager.loadError {
-                    SettingRowDivider()
-                    Text(loadError)
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                }
-
-                SettingRowDivider()
-                SettingToggleRow(title: "Show mascot in Pomodoro", isOn: $mascotManager.showInPomodoro)
-            }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .onAppear { refreshPermissionStates() }

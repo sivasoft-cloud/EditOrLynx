@@ -48,10 +48,6 @@ struct DownloadManagerSettingsView: View {
     @ObservedObject private var nowPlayingManager = NowPlayingManager.shared
     @ObservedObject private var notificationManager = NotificationManager.shared
 
-    @AppStorage("avatarPalette") private var avatarPalette: String = "aurora"
-    @AppStorage("notch.puffEnabled") private var notchPuffEnabled: Bool = true
-    @AppStorage("notchMascotChoice") private var notchMascotChoice: String = "jelly"
-
     @State private var selectedTab: SettingsTab = .general
     @State private var hoveredTab: SettingsTab? = nil
 
@@ -638,81 +634,23 @@ struct DownloadManagerSettingsView: View {
             homeSlotRow(title: "Right slot", selection: $appState.homeTrailingPanelRaw)
         }
 
-        settingsCard(title: "Notch Companion & Mascot", symbol: "sparkles") {
-            VStack(alignment: .leading, spacing: 14) {
-                Text("Select an animated companion living inside your compact notch pill, or disable it completely.")
+        settingsCard(title: "Notchy Liquid Glass Surface", symbol: "sparkles") {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Apple G2 continuous squircle curvature with multi-mode specular glass reflections.")
                     .font(Typo.body(10))
                     .foregroundStyle(Pal.secondary)
 
-                HStack(spacing: 8) {
-                    ForEach(NotchMascotType.allCases) { m in
-                        let isSel = notchMascotChoice == m.rawValue
-                        Button {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                                notchMascotChoice = m.rawValue
-                            }
-                        } label: {
-                            VStack(spacing: 6) {
-                                ZStack {
-                                    Circle()
-                                        .fill(isSel ? Pal.accent.opacity(0.2) : Pal.elevated)
-                                        .frame(width: 36, height: 36)
-                                        .overlay(Circle().stroke(isSel ? Pal.accent : Pal.stroke, lineWidth: 1.2))
-
-                                    switch m {
-                                    case .disabled:
-                                        Image(systemName: "nosign")
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundStyle(Pal.secondary)
-                                    case .jelly:
-                                        PuffNotchView(size: 24)
-                                    case .cat:
-                                        NotchCyberCatView(size: 24)
-                                    case .ghost:
-                                        NotchCosmicGhostView(size: 24)
-                                    case .spark:
-                                        NotchRetroSparkView(size: 24)
-                                    case .panda:
-                                        NotchZenPandaView(size: 24)
-                                    }
-                                }
-
-                                Text(m.title)
-                                    .font(Typo.body(9.5, isSel ? .bold : .medium))
-                                    .foregroundStyle(isSel ? Pal.text : Pal.secondary)
-                                    .lineLimit(1)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(isSel ? Color.white.opacity(0.08) : Color.white.opacity(0.02), in: RoundedRectangle(cornerRadius: 10))
-                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(isSel ? Pal.accent : Pal.stroke, lineWidth: 1))
+                HStack {
+                    Text("Liquid Glass Variant")
+                        .font(Typo.body(11, .medium))
+                        .foregroundStyle(Pal.text)
+                    Spacer()
+                    Picker("", selection: $appState.notchMaterialVariant) {
+                        ForEach(NotchyGlassVariant.allCases, id: \.self) { variant in
+                            Text(variant.displayName).tag(variant)
                         }
-                        .buttonStyle(.plain)
                     }
-                }
-
-                if notchMascotChoice != NotchMascotType.disabled.rawValue {
-                    divider
-
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Color Palette")
-                                .font(Typo.body(11, .medium))
-                                .foregroundStyle(Pal.text)
-                            Text("Choose color theme for your notch companion.")
-                                .font(Typo.body(9))
-                                .foregroundStyle(Pal.tertiary)
-                        }
-                        Spacer()
-                        Picker("", selection: $avatarPalette) {
-                            Text("Aurora").tag("aurora")
-                            Text("Sunset").tag("sunset")
-                            Text("Cyberpunk").tag("cyberpunk")
-                            Text("Bubblegum").tag("bubblegum")
-                            Text("Neon").tag("neon")
-                        }
-                        .frame(width: 140)
-                    }
+                    .frame(width: 150)
                 }
             }
         }

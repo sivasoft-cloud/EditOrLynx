@@ -24,8 +24,7 @@ let package = Package(
             ],
             path: "Sources/Pounce",
             exclude: [
-                "SuperIsland/Resources/Assets.xcassets",
-                "SuperIsland/Onboarding/Hello.json"
+                "SuperIsland/Resources/Assets.xcassets"
             ],
             resources: [
                 .process("Resources"),

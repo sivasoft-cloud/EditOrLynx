@@ -143,16 +143,12 @@ struct IslandContainerView: View {
 
     // MARK: - Shape
 
-    private var islandShape: PillShape {
-        PillShape(
-            topLeadingRadius: appState.currentTopLeadingCornerRadius,
-            topTrailingRadius: appState.currentTopTrailingCornerRadius,
-            bottomLeadingRadius: appState.currentBottomLeadingCornerRadius,
-            bottomTrailingRadius: appState.currentBottomTrailingCornerRadius,
-            outwardTopCorners: appState.usesOutwardTopCorners,
-            topCutoutWidth: appState.currentTopCutoutWidth,
-            topCutoutDepth: appState.currentTopCutoutDepth,
-            topCutoutCornerRadius: appState.currentTopCutoutCornerRadius
+    private var islandShape: TopAttachedNotchShape {
+        TopAttachedNotchShape(
+            bottomRadius: appState.currentBottomLeadingCornerRadius,
+            topEarRadius: max(appState.currentTopLeadingCornerRadius, 12),
+            isDetached: !appState.usesOutwardTopCorners,
+            inset: 0
         )
     }
 

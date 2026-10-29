@@ -1,6 +1,13 @@
 import AppKit
 import SwiftUI
 
+public enum SwipeDirection: String, Sendable {
+    case left
+    case right
+    case up
+    case down
+}
+
 struct SwipeDetector: ViewModifier {
     let onSwipe: (SwipeDirection) -> Void
     var minimumDistance: CGFloat = 20

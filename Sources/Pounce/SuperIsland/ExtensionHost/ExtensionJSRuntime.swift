@@ -585,49 +585,17 @@ final class ExtensionJSRuntime {
 
     private func injectMascot(into superIsland: JSValue) {
         let mascot = JSValue(newObjectIn: context)!
-
-        let setExpression: @convention(block) (String) -> Void = { expression in
-            let trimmed = expression.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { return }
-            DispatchQueue.main.async {
-                MascotManager.shared.setExpression(trimmed)
-            }
-        }
-
-        let getExpression: @convention(block) () -> String = {
-            return MainActor.assumeIsolated {
-                MascotManager.shared.currentExpression
-            }
-        }
-
+        let setExpression: @convention(block) (String) -> Void = { _ in }
+        let getExpression: @convention(block) () -> String = { "default" }
         let getSelected: @convention(block) () -> JSValue? = { [weak self] in
             guard let self else { return nil }
-            let info = MainActor.assumeIsolated {
-                let mgr = MascotManager.shared
-                return ["slug": mgr.selectedSlug, "name": mgr.currentTemplateName] as [String: Any]
-            }
-            return JSValue(object: info, in: self.context)
+            return JSValue(object: ["slug": "default", "name": "Default"], in: self.context)
         }
-
         let list: @convention(block) () -> JSValue? = { [weak self] in
             guard let self else { return nil }
-            let mascots = MainActor.assumeIsolated {
-                MascotManager.shared.availableMascots.map { entry in
-                    ["slug": entry.slug, "name": entry.name] as [String: Any]
-                }
-            }
-            return JSValue(object: mascots, in: self.context)
+            return JSValue(object: [] as [Any], in: self.context)
         }
-
-        let setInput: @convention(block) (String, JSValue) -> Void = { name, value in
-            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { return }
-            let converted: Any = value.toBool()
-            DispatchQueue.main.async {
-                MascotManager.shared.setInput(trimmed, converted)
-            }
-        }
-
+        let setInput: @convention(block) (String, JSValue) -> Void = { _, _ in }
         mascot.setObject(setExpression, forKeyedSubscript: "setExpression" as NSString)
         mascot.setObject(getExpression, forKeyedSubscript: "getExpression" as NSString)
         mascot.setObject(getSelected, forKeyedSubscript: "getSelected" as NSString)

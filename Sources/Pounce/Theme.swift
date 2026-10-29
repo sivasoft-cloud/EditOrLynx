@@ -318,7 +318,7 @@ struct FilmThumb: View {
     }
 }
 
-typealias NotchShape = PillShape
+typealias NotchShape = TopAttachedNotchShape
 
 struct CircleIconButton: View {
     var symbol: String
