@@ -7,18 +7,18 @@ public final class MainWindowController: NSWindowController {
 
     private init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 920, height: 580),
+            contentRect: NSRect(x: 0, y: 0, width: 940, height: 600),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
-        window.title = "Edit.or.lynx Downloader"
+        window.title = "Edit.or.lynx"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.backgroundColor = NSColor(red: 0.08, green: 0.08, blue: 0.10, alpha: 1.0)
+        window.backgroundColor = NSColor(red: 0.07, green: 0.07, blue: 0.09, alpha: 1.0)
         window.isOpaque = false
         window.hasShadow = true
-        window.minSize = NSSize(width: 720, height: 460)
+        window.minSize = NSSize(width: 820, height: 500)
         window.isMovableByWindowBackground = true
         window.setFrameAutosaveName("EditOrLynxMainWindow")
         window.center()

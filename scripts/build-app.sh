@@ -16,7 +16,11 @@ echo "▸ Assembling app bundle…"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$APP/Contents/Library/LoginItems"
 
-cp "$ROOT/.build/$CONFIG/Pounce" "$APP/Contents/MacOS/Edit.or.lynx"
+if [ -f "$ROOT/.build/$CONFIG/EditOrLynx" ]; then
+    cp "$ROOT/.build/$CONFIG/EditOrLynx" "$APP/Contents/MacOS/Edit.or.lynx"
+elif [ -f "$ROOT/.build/$CONFIG/Pounce" ]; then
+    cp "$ROOT/.build/$CONFIG/Pounce" "$APP/Contents/MacOS/Edit.or.lynx"
+fi
 cp "$ROOT/assets/Info.plist" "$APP/Contents/Info.plist"
 cp "$ROOT/assets/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 
@@ -54,19 +58,22 @@ cp -R "$ROOT/Extension" "$APP/Contents/Resources/Extension"
 echo "▸ Signing (ad-hoc)…"
 xattr -cr "$APP" 2>/dev/null || true
 codesign --force --sign - "$APP/Contents/MacOS/Edit.or.lynx" 2>/dev/null || true
-codesign --force --sign - "$APP" 2>/dev/null || true
+codesign --force --deep --sign - "$APP" 2>/dev/null || true
 
 echo "▸ Installing to /Applications/Edit.or.lynx.app…"
 rm -rf "/Applications/Edit.or.lynx.app"
 cp -R "$APP" "/Applications/Edit.or.lynx.app"
 xattr -cr "/Applications/Edit.or.lynx.app" 2>/dev/null || true
 codesign --force --sign - "/Applications/Edit.or.lynx.app/Contents/MacOS/Edit.or.lynx" 2>/dev/null || true
-codesign --force --sign - "/Applications/Edit.or.lynx.app" 2>/dev/null || true
+codesign --force --deep --sign - "/Applications/Edit.or.lynx.app" 2>/dev/null || true
 
 echo "▸ Creating DMG package…"
 DMG="$ROOT/dist/Edit.or.lynx.dmg"
 rm -f "$DMG"
 hdiutil create -volname "Edit.or.lynx" -srcfolder "$APP" -ov -format UDZO "$DMG" >/dev/null 2>&1 || true
+cp "$DMG" "/Users/sivasoft/Downloads/Edit.or.lynx.dmg" 2>/dev/null || true
+cp "$DMG" "/Users/sivasoft/Edit.or.lynx.dmg" 2>/dev/null || true
+cp "$DMG" "/Users/sivasoft/Downloads/Edit.or.lynx/Edit.or.lynx.dmg" 2>/dev/null || true
 
 echo "▸ Done: /Applications/Edit.or.lynx.app"
 echo "  DMG: $DMG"
