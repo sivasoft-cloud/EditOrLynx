@@ -1,88 +1,172 @@
 import AppKit
-import SwiftUI
 import Combine
+import Foundation
+import SwiftUI
 
 @MainActor
-public final class NotchWindowController: ObservableObject {
+public final class NotchWindowController: NSWindowController {
     public static let shared = NotchWindowController()
 
-    @Published public var isExpanded: Bool = false
-    @Published public var currentSize: CGSize = CGSize(width: 210, height: 32)
-    @Published public var selectedTab: NotchHUDTab = .downloads
+    private var trackingArea: NSTrackingArea?
+    private var hoverTimer: Timer?
+    private var cancellables = Set<AnyCancellable>()
 
-    private var panel: NotchPanel?
-    private var outsideClickMonitor: Any?
-    private var mouseMoveMonitor: Any?
+    private init() {
+        let panel = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 214, height: 34),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.isOpaque = false
+        panel.backgroundColor = .clear
+        panel.hasShadow = false
+        panel.level = .statusBar
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .ignoresCycle]
+        panel.hidesOnDeactivate = false
+        panel.isMovableByWindowBackground = false
 
-    private init() {}
+        super.init(window: panel)
+
+        setupStateObservation()
+        setupScreenChangeObservation()
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     public func setup() {
-        guard let screen = NSScreen.main else { return }
-        let geom = NotchGeometry(screen: screen)
-        let compact = geom.compactIslandSize(horizontalPadding: 16)
-        self.currentSize = compact
-
-        let frame = geom.windowFrame(for: compact)
-        let panel = NotchPanel(contentRect: frame)
-
-        let surface = NotchSurfaceView()
-            .environmentObject(self)
-            .environmentObject(DownloadEngine.shared)
-
-        let hostingView = NSHostingView(rootView: surface)
-        panel.contentView = hostingView
-        panel.setFrame(frame, display: true)
-        panel.orderFrontRegardless()
-        self.panel = panel
-
-        setupMonitors()
-    }
-
-    public func toggleExpanded() {
-        if isExpanded {
-            collapse()
-        } else {
-            expand()
+        let rootView = NotchRootView { [weak self] hovering in
+            self?.handleHover(hovering)
         }
+        .environmentObject(DownloadEngine.shared)
+        .environmentObject(NotchState.shared)
+
+        let hosting = NSHostingView(rootView: rootView)
+        hosting.autoresizingMask = [.width, .height]
+        window?.contentView = hosting
+
+        reposition(animated: false)
+        window?.orderFrontRegardless()
+        setupTrackingArea()
     }
 
-    public func expand() {
-        isExpanded = true
-        updateFrame(size: CGSize(width: 460, height: 160))
+    private func setupStateObservation() {
+        NotchState.shared.$mode
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.reposition(animated: true)
+            }
+            .store(in: &cancellables)
+
+        NotchState.shared.$isLockedExpanded
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.reposition(animated: true)
+            }
+            .store(in: &cancellables)
     }
 
-    public func collapse() {
-        isExpanded = false
-        guard let screen = NSScreen.main else { return }
-        let geom = NotchGeometry(screen: screen)
-        let compact = geom.compactIslandSize(horizontalPadding: 16)
-        updateFrame(size: compact)
-    }
-
-    private func updateFrame(size: CGSize) {
-        guard let panel = panel, let screen = NSScreen.main else { return }
-        self.currentSize = size
-        let geom = NotchGeometry(screen: screen)
-        let frame = geom.windowFrame(for: size)
-
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.28
-            ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            panel.animator().setFrame(frame, display: true)
-        }
-    }
-
-    private func setupMonitors() {
-        outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            guard let self = self, self.isExpanded else { return }
-            let loc = NSEvent.mouseLocation
-            if let frame = self.panel?.frame, !frame.contains(loc) {
-                self.collapse()
+    private func setupScreenChangeObservation() {
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.reposition(animated: false)
             }
         }
     }
 
-    deinit {
-        if let m = outsideClickMonitor { NSEvent.removeMonitor(m) }
+    public func show() {
+        reposition(animated: false)
+        window?.orderFrontRegardless()
+    }
+
+    public func hide() {
+        window?.orderOut(nil)
+    }
+
+    public func toggleExpanded() {
+        show()
+        NotchState.shared.toggleExpand()
+    }
+
+    private func handleHover(_ hovering: Bool) {
+        hoverTimer?.invalidate()
+        if hovering {
+            NotchState.shared.isHovered = true
+            reposition(animated: true)
+        } else {
+            hoverTimer = Timer.scheduledTimer(withTimeInterval: 0.45, repeats: false) { [weak self] _ in
+                Task { @MainActor in
+                    guard let self else { return }
+                    if !NotchState.shared.isLockedExpanded {
+                        NotchState.shared.isHovered = false
+                        self.reposition(animated: true)
+                    }
+                }
+            }
+        }
+    }
+
+    public func reposition(animated: Bool = true) {
+        guard let window else { return }
+        guard let screen = NSScreen.screens.first(where: { $0.safeAreaInsets.top > 0 }) ?? NSScreen.screens.first ?? NSScreen.main else { return }
+
+        let state = NotchState.shared
+        let width: CGFloat
+        let height: CGFloat
+        if state.isExpanded {
+            width = (state.mode == .offer ? 480 : state.expandedWidth)
+            height = (state.mode == .offer ? 180 : state.expandedHeight) + 48
+        } else {
+            width = state.compactWidth
+            height = state.compactHeight
+        }
+
+        let screenFrame = screen.frame
+        let midX = screenFrame.midX
+        let topY = screenFrame.maxY
+
+        // Pinned directly flush to top edge (exact stock Lynx placement)
+        let targetY = topY - height
+
+        let targetFrame = NSRect(
+            x: midX - (width / 2),
+            y: targetY,
+            width: width,
+            height: height
+        )
+
+        if animated {
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.30
+                ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                window.animator().setFrame(targetFrame, display: true)
+            }
+        } else {
+            window.setFrame(targetFrame, display: true)
+        }
+
+        setupTrackingArea()
+    }
+
+    private func setupTrackingArea() {
+        guard let view = window?.contentView else { return }
+        if let existing = trackingArea {
+            view.removeTrackingArea(existing)
+        }
+
+        let options: NSTrackingArea.Options = [
+            .mouseEnteredAndExited,
+            .activeAlways,
+            .inVisibleRect
+        ]
+        let area = NSTrackingArea(rect: view.bounds, options: options, owner: self, userInfo: nil)
+        view.addTrackingArea(area)
+        self.trackingArea = area
     }
 }

@@ -168,3 +168,68 @@ public struct DownloadItem: Identifiable, Codable, Equatable, Sendable {
         return remaining / speed
     }
 }
+
+// MARK: - Offering & Media Models
+public enum LinkKind: String, Codable, Sendable {
+    case video
+    case audio
+    case file
+    case playlist
+}
+
+public struct QualityOption: Identifiable, Hashable, Codable, Sendable {
+    public var label: String
+    public var sublabel: String
+    public var bytes: Int64
+    public var recommended: Bool
+
+    public var id: String { label }
+
+    public init(label: String, sublabel: String = "", bytes: Int64 = 0, recommended: Bool = false) {
+        self.label = label
+        self.sublabel = sublabel
+        self.bytes = bytes
+        self.recommended = recommended
+    }
+
+    public var sizeText: String { Formatters.bytes(bytes) }
+}
+
+public struct LinkInfo: Identifiable, Equatable, Sendable {
+    public var id: UUID
+    public var url: URL
+    public var host: String
+    public var title: String
+    public var kind: LinkKind
+    public var duration: TimeInterval?
+    public var fullBytes: Int64
+    public var qualities: [QualityOption]
+
+    public init(
+        id: UUID = UUID(),
+        url: URL,
+        host: String = "",
+        title: String = "",
+        kind: LinkKind = .video,
+        duration: TimeInterval? = nil,
+        fullBytes: Int64 = 0,
+        qualities: [QualityOption] = []
+    ) {
+        self.id = id
+        self.url = url
+        self.host = host.isEmpty ? (url.host ?? "") : host
+        self.title = title.isEmpty ? (url.lastPathComponent.removingPercentEncoding ?? "Media") : title
+        self.kind = kind
+        self.duration = duration
+        self.fullBytes = fullBytes
+        self.qualities = qualities
+    }
+
+    public var durationText: String {
+        guard let duration, duration > 0 else { return "Media Link" }
+        let total = Int(duration)
+        let mins = total / 60
+        let secs = total % 60
+        return String(format: "%d:%02d", mins, secs)
+    }
+}
