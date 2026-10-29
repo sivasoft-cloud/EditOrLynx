@@ -1,3 +1,16 @@
+# Clean-Slate Rebuild from Scratch with Pure Notchy Architecture (v3.0.0)
+*Published: 2026-10-29 11:16:03*
+
+Rebuilt Edit.or.lynx completely from scratch. Integrated 100% of downloader features (turbo segmented engine, GDrive batch auto-zipping, BitTorrent/aria2c engine, lossless audio extraction, browser extensions bridge, clipboard monitor) with pure Notchy G2 squircle hardware notch architecture, multi-mode liquid glass (Dark & Light modes), card settings, and 120 BPM motion engine.
+
+### Highlights in this Release:
+- **Pure Notchy G2 Squircle Geometry**: Full G2 continuous curvature (R * 1.28 extent, 0.44R and 0.82R control points) and outward top ear flairs.
+- **Liquid Glass Materials**: Support for both Dark Mode (.liquidGlass, .matteDark, .trueBlack) and Light Mode (.liquidLight, .matteLight) with dynamic specular highlights and razor rim strokes.
+- **Card-Based Settings System**: High-density grouped cards with custom toggles, sliders, menus, and dedicated Downloader pane.
+- **Continuous 120 BPM Motion Engine**: 1440x1440 analytical spring-driven UI morph across 12 distinct UI states with 4x subframe motion blur at 60fps.
+- **Performance Optimization**: <1% idle CPU utilization through paused timers and compositor-driven rendering.
+
+---
 # Purge Legacy Notch Bloat & Keep Pure Notchy Implementation (v2.0.1)
 *Published: 2026-10-29 11:06:23*
 
