@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>Edit.or.lynx</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.editor.lynx</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>Edit.or.lynx</string>
+    <key>CFBundleDisplayName</key>
+    <string>Edit.or.lynx</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Edit.or.lynx uses Apple Events to display track artwork, title, and playback controls for Spotify and Apple Music in your Dynamic Notch.</string>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>© edit.or.siva</string>
+    <key>EditorBrandingNote</key>
+    <string>Made by edit.or.siva · Instagram @edit.or.siva</string>
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+    <key>LicenseAPIBaseURL</key>
+    <string>https://edit-orlynk.sivasoft.workers.dev</string>
+    <key>ProKeyPageURL</key>
+    <string>https://edit-orlynk.sivasoft.workers.dev/get-pro-key#pro</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.editor.lynx</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>editorlynx</string>
+                <string>pounce</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>

@@ -1,0 +1,9 @@
+====================================================
+🚀 Edit.or.lynx Pro Key Server running on port 3000
+   - Public Claim Site: http://localhost:3000/get-pro-key
+   - Admin Dashboard:   http://localhost:3000/admin
+   - License Validate:  POST http://localhost:3000/api/license/validate
+   - Admin Password:    sivaadminpro2026
+====================================================
+(node:26760) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)

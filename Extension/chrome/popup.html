@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Edit.or.lynx</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <div class="mark" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2v8M8 10 4.6 6.6M8 10l3.4-3.4M2.5 12.2V14h11v-1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+      <div class="titles">
+        <strong>Edit.or.lynx</strong>
+        <span id="status">Checking the app…</span>
+      </div>
+      <span id="dot" class="dot"></span>
+    </header>
+
+    <section class="actions">
+      <button id="page" class="primary">
+        <span>Download this page</span>
+        <kbd>⌥⇧D</kbd>
+      </button>
+      <button id="clip" class="secondary">Make a clip…</button>
+    </section>
+
+    <section class="link">
+      <input id="url" type="url" placeholder="Paste a link" spellcheck="false" />
+      <button id="send" title="Send to Edit.or.lynx" aria-label="Send to Edit.or.lynx">↵</button>
+    </section>
+
+    <label class="toggle">
+      <input id="catch" type="checkbox" />
+      <span>
+        <strong>Take over browser downloads</strong>
+        <em>Files you start in the browser go to the app instead.</em>
+      </span>
+    </label>
+
+    <footer>
+      <span id="hint">Right-click any link or video to send it.</span>
+    </footer>
+    <div style="text-align:center;padding:4px 12px 10px;font-size:10px;color:rgba(255,255,255,0.4);">
+      Made by edit.or.siva · Instagram @edit.or.siva
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

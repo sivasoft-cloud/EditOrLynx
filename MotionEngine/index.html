@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Edit.or.lynx — Continuous Motion Engine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+  }
+
+  body {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+  }
+
+  #stage {
+    position: relative;
+    width: 1440px;
+    height: 1440px;
+    overflow: hidden;
+    background-color: var(--canvas-bg);
+  }
+
+  :root {
+    --canvas-bg: #0C0D10;
+    --grid-dot: rgba(255, 255, 255, 0.04);
+    --morph-bg: #16171B;
+    --morph-border: rgba(255, 255, 255, 0.08);
+    --morph-shadow: 0 24px 64px rgba(0, 0, 0, 0.45), 0 4px 16px rgba(0, 0, 0, 0.35);
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.62);
+    --text-tertiary: rgba(255, 255, 255, 0.38);
+    --accent: #38BDF8;
+    --accent-glow: rgba(56, 189, 248, 0.22);
+    --notch-fill: #000000;
+  }
+
+  body.theme-light {
+    --canvas-bg: #EAE8E4;
+    --grid-dot: rgba(0, 0, 0, 0.045);
+    --morph-bg: #111113;
+    --morph-border: rgba(255, 255, 255, 0.12);
+    --morph-shadow: 0 24px 60px rgba(0, 0, 0, 0.22), 0 6px 18px rgba(0, 0, 0, 0.14);
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255, 255, 255, 0.66);
+    --text-tertiary: rgba(255, 255, 255, 0.42);
+    --accent: #0284C7;
+    --accent-glow: rgba(2, 132, 199, 0.25);
+    --notch-fill: #000000;
+  }
+
+  /* Canvas background dot grid */
+  .grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(var(--grid-dot) 1.5px, transparent 1.5px);
+    background-size: 32px 32px;
+    background-position: 0 0;
+    pointer-events: none;
+  }
+
+  /* Camera view container */
+  #camera {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+    pointer-events: none;
+  }
+
+  /* THE SINGLE MORPHING SHAPE */
+  #morph-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: auto;
+    overflow: hidden;
+    background: var(--morph-bg);
+    border: 1px solid var(--morph-border);
+    box-shadow: var(--morph-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Inner specular rim highlight */
+  #specular-rim {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.02) 20%, transparent 60%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Outward Bezel Notch Ears (G2 continuity) */
+  #notch-ears {
+    position: absolute;
+    top: 0;
+    left: -20px;
+    right: -20px;
+    height: 20px;
+    pointer-events: none;
+    opacity: 0;
+  }
+  #notch-ears svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    fill: var(--notch-fill);
+  }
+
+  /* Content state wrappers */
+  .state-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(0.96);
+    pointer-events: none;
+  }
+
+  /* STATE 1: BUTTON */
+  #view-button {
+    gap: 10px;
+    padding: 0 20px;
+  }
+  .btn-label {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  .btn-icon {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text-primary);
+    stroke-width: 2;
+    fill: none;
+  }
+
+  /* STATE 2: LOADER */
+  #view-loader svg {
+    width: 28px;
+    height: 28px;
+    transform-origin: center;
+  }
+  .loader-track {
+    stroke: rgba(255, 255, 255, 0.15);
+    stroke-width: 2.5;
+    fill: none;
+  }
+  .loader-indicator {
+    stroke: var(--text-primary);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    fill: none;
+    stroke-dasharray: 60;
+  }
+
+  /* STATE 3: CHECK */
+  #view-check svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--text-primary);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  /* STATE 4: DYNAMIC ISLAND NOTCH */
+  #view-island {
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+  .island-pill-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .island-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .island-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  .island-indicator {
+    font-size: 11px;
+    font-family: 'Geist Mono', monospace;
+    color: var(--text-secondary);
+  }
+
+  /* STATE 5 & 6: MUSIC PLAYER */
+  #view-player {
+    flex-direction: column;
+    padding: 14px 20px;
+    justify-content: space-between;
+  }
+  .player-top {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .player-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .player-art {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #1E293B, #0F172A);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .player-art svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--accent);
+    stroke-width: 1.8;
+    fill: none;
+  }
+  .player-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .player-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .player-artist {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .player-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .btn-play-pause {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-play-pause svg {
+    width: 14px;
+    height: 14px;
+    fill: var(--text-primary);
+  }
+  .player-bottom {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .scrub-track {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .scrub-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 3px;
+    background: var(--text-primary);
+    width: 30%;
+  }
+  .scrub-thumb {
+    position: absolute;
+    top: 50%;
+    left: 30%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transform: translate(-50%, -50%);
+  }
+  .player-times {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Geist Mono', monospace;
+    font-size: 10px;
+    color: var(--text-tertiary);
+  }
+
+  /* STATE 7: VOLUME SLIDER */
+  #view-volume {
+    width: 100%;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .vol-icon {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text-secondary);
+    stroke-width: 1.8;
+    fill: none;
+  }
+  .vol-track-wrap {
+    position: relative;
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+  .vol-track-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 4px;
+    background: var(--text-primary);
+    width: 70%;
+  }
+  .vol-thumb {
+    position: absolute;
+    top: 50%;
+    left: 70%;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+
+  /* STATE 8: TOGGLE */
+  #view-toggle {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 3px;
+  }
+  .toggle-knob {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: 32px;
+    border-radius: 16px;
+    background: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  }
+
+  /* STATE 9: SEGMENTED TABS */
+  #view-tabs {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 3px;
+  }
+  .tabs-liquid-indicator {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 4px;
+    width: 100px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .tab-item {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    z-index: 1;
+    letter-spacing: -0.01em;
+  }
+
+  /* STATE 10: DATA CHART */
+  #view-chart {
+    flex-direction: column;
+    padding: 20px 24px;
+    justify-content: space-between;
+  }
+  .chart-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .chart-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .chart-val {
+    font-family: 'Geist Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .chart-svg-wrap {
+    position: relative;
+    width: 100%;
+    height: 120px;
+  }
+  .chart-svg-wrap svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .chart-path {
+    stroke: var(--text-primary);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+  }
+  .chart-grid-line {
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 1;
+    stroke-dasharray: 4 4;
+  }
+  .chart-tooltip {
+    position: absolute;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #000000;
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transform: translate(-50%, -100%) translateY(-8px);
+    opacity: 0;
+  }
+
+  /* STATE 11: ⌘K COMMAND PALETTE */
+  #view-palette {
+    flex-direction: column;
+    padding: 12px 16px;
+    justify-content: center;
+  }
+  .palette-input-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .palette-search-icon {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text-secondary);
+    stroke-width: 2;
+    fill: none;
+  }
+  .palette-text {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .palette-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 18px;
+    background: var(--accent);
+    margin-left: 1px;
+    vertical-align: middle;
+  }
+  .palette-shortcut {
+    padding: 3px 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    font-family: 'Geist Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* STATE 12: TOAST */
+  #view-toast {
+    gap: 10px;
+    padding: 0 18px;
+  }
+  .toast-icon {
+    width: 16px;
+    height: 16px;
+    stroke: var(--accent);
+    stroke-width: 2.2;
+    fill: none;
+  }
+  .toast-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  /* CURSOR */
+  #cursor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 22px;
+    height: 22px;
+    pointer-events: none;
+    z-index: 999;
+    transform-origin: 0 0;
+  }
+  #cursor svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));
+  }
+
+  /* On-screen playback & theme controls (interactive testing) */
+  #hud-overlay {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    right: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Geist Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    pointer-events: auto;
+    z-index: 1000;
+  }
+  .hud-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+  }
+  .hud-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="grid-pattern"></div>
+
+  <!-- Camera transforms everything inside -->
+  <div id="camera">
+    <div id="morph-container">
+      <!-- Outward top notch ears (G2 squircle) -->
+      <div id="notch-ears">
+        <svg viewBox="0 0 256 20" preserveAspectRatio="none">
+          <path d="M 0 0 C 12 0, 16 20, 20 20 L 236 20 C 240 20, 244 0, 256 0 Z" />
+        </svg>
+      </div>
+
+      <div id="specular-rim"></div>
+
+      <!-- State 1: Button -->
+      <div id="view-button" class="state-content">
+        <svg class="btn-icon" viewBox="0 0 24 24"><path d="M12 4v12m0 0l-4-4m4 4l4-4M4 18h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="btn-label">Deploy Engine</span>
+      </div>
+
+      <!-- State 2: Loader -->
+      <div id="view-loader" class="state-content">
+        <svg viewBox="0 0 32 32">
+          <circle class="loader-track" cx="16" cy="16" r="12" />
+          <circle id="loader-ring" class="loader-indicator" cx="16" cy="16" r="12" />
+        </svg>
+      </div>
+
+      <!-- State 3: Check -->
+      <div id="view-check" class="state-content">
+        <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+      </div>
+
+      <!-- State 4: Dynamic Island Notch -->
+      <div id="view-island" class="state-content">
+        <div class="island-pill-left">
+          <div class="island-dot"></div>
+          <span class="island-title">Edit.or.lynx</span>
+        </div>
+        <span class="island-indicator">Active</span>
+      </div>
+
+      <!-- State 5 & 6: Music Player & Scrub -->
+      <div id="view-player" class="state-content">
+        <div class="player-top">
+          <div class="player-meta">
+            <div class="player-art">
+              <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div class="player-info">
+              <span class="player-title">Lynx Flow</span>
+              <span class="player-artist">edit.or.siva</span>
+            </div>
+          </div>
+          <div class="player-controls">
+            <div id="play-pause-btn" class="btn-play-pause">
+              <svg id="play-pause-svg" viewBox="0 0 24 24">
+                <polygon id="play-poly" points="6,4 20,12 6,20" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="player-bottom">
+          <div class="scrub-track" id="scrub-track">
+            <div class="scrub-fill" id="scrub-fill"></div>
+            <div class="scrub-thumb" id="scrub-thumb"></div>
+          </div>
+          <div class="player-times">
+            <span id="player-cur-time">1:12</span>
+            <span>3:40</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- State 7: Volume Slider -->
+      <div id="view-volume" class="state-content">
+        <svg class="vol-icon" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5zm4.5 3a5 5 0 010 8m2.5-11a9 9 0 010 14"/></svg>
+        <div class="vol-track-wrap" id="vol-track">
+          <div class="vol-track-fill" id="vol-fill"></div>
+          <div class="vol-thumb" id="vol-thumb"></div>
+        </div>
+      </div>
+
+      <!-- State 8: Toggle Switch -->
+      <div id="view-toggle" class="state-content">
+        <div class="toggle-knob" id="toggle-knob"></div>
+      </div>
+
+      <!-- State 9: Segmented Tabs -->
+      <div id="view-tabs" class="state-content">
+        <div class="tabs-liquid-indicator" id="tab-indicator"></div>
+        <div class="tab-item">Overview</div>
+        <div class="tab-item">Metrics</div>
+        <div class="tab-item">Logs</div>
+      </div>
+
+      <!-- State 10: Vector Chart -->
+      <div id="view-chart" class="state-content">
+        <div class="chart-header">
+          <span class="chart-title">Transfer Throughput</span>
+          <span class="chart-val" id="chart-val-label">184.2 MB/s</span>
+        </div>
+        <div class="chart-svg-wrap">
+          <svg viewBox="0 0 380 120">
+            <line class="chart-grid-line" x1="0" y1="30" x2="380" y2="30" />
+            <line class="chart-grid-line" x1="0" y1="65" x2="380" y2="65" />
+            <line class="chart-grid-line" x1="0" y1="100" x2="380" y2="100" />
+            <path id="chart-path-line" class="chart-path" d="M 10 100 C 60 90, 110 50, 160 55 C 210 60, 260 25, 310 20 C 340 18, 360 30, 370 28" />
+          </svg>
+          <div class="chart-tooltip" id="chart-tooltip">+28.4%</div>
+        </div>
+      </div>
+
+      <!-- State 11: ⌘K Command Palette -->
+      <div id="view-palette" class="state-content">
+        <div class="palette-input-row">
+          <svg class="palette-search-icon" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <div class="palette-text">
+            <span id="palette-query"></span><span class="palette-cursor" id="palette-cursor"></span>
+          </div>
+          <span class="palette-shortcut">↵</span>
+        </div>
+      </div>
+
+      <!-- State 12: Toast -->
+      <div id="view-toast" class="state-content">
+        <svg class="toast-icon" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+        <span class="toast-label">Saved 42 transfers</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Cursor -->
+  <div id="cursor">
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M3 3l7.5 18 2.5-7.5 7.5-2.5L3 3z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- Testing HUD (Hidden when rendering frames) -->
+  <div id="hud-overlay">
+    <div>
+      <span id="hud-time">0.00s</span> / 14.00s · Beat <span id="hud-beat">1</span>/28 · Bar <span id="hud-bar">1</span>/7
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="hud-btn" id="btn-toggle-theme">Toggle Theme (T)</button>
+      <button class="hud-btn" id="btn-play">Pause (Space)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =========================================================================
+// 1. ANALYTICAL SPRING STEP RESPONSE ENGINE (Closed-Form Math)
+// =========================================================================
+
+function springStep(t, omega, zeta) {
+  if (t <= 0) return 0.0;
+  if (zeta >= 1.0) {
+    const a = omega;
+    return 1.0 - Math.exp(-a * t) * (1.0 + a * t);
+  }
+  const wd = omega * Math.sqrt(1.0 - zeta * zeta);
+  const decay = Math.exp(-zeta * omega * t);
+  return 1.0 - decay * (Math.cos(wd * t) + (zeta / Math.sqrt(1.0 - zeta * zeta)) * Math.sin(wd * t));
+}
+
+// Accumulate multiple steps over time:
+// steps: [ [triggerTime, targetValue, omega, zeta], ... ]
+function springSeries(t, initVal, steps) {
+  let val = initVal;
+  for (let i = 0; i < steps.length; i++) {
+    const [st, target, omega, zeta] = steps[i];
+    const prev = i === 0 ? initVal : steps[i - 1][1];
+    const delta = target - prev;
+    val += delta * springStep(t - st, omega, zeta);
+  }
+  return val;
+}
+
+// Smooth blend clamp
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+// =========================================================================
+// 2. THE 12-STATE MOTION SPECIFICATION ON 120 BPM BEAT GRID
+// =========================================================================
+
+// Total duration = 14.0s (7 bars * 4 beats * 0.5s = 28 beats)
+const DURATION = 14.0;
+
+// Dimensions & radii keyframes [t, val, omega, zeta]
+const widthSteps = [
+  [0.00,  180, 24, 0.82],  // State 1: Button
+  [0.50,   52, 26, 0.80],  // State 2: Circle Loader
+  [1.00,   84, 28, 0.78],  // State 3: Check Pill
+  [1.50,  216, 26, 0.82],  // State 4: Notch Island
+  [2.00,  380, 24, 0.80],  // State 5: Music Player
+  [3.00,  380, 24, 0.80],  // State 6: Scrub (same width)
+  [4.00,  280, 26, 0.82],  // State 7: Volume Slider
+  [4.50,  330, 22, 0.70],  // State 7 (Elastic drag stretch past max)
+  [4.90,  280, 24, 0.76],  // State 7 release snap
+  [5.50,   68, 28, 0.80],  // State 8: Toggle
+  [6.50,  320, 26, 0.82],  // State 9: Tabs
+  [8.00,  440, 24, 0.80],  // State 10: Data Chart
+  [10.00, 420, 26, 0.82],  // State 11: Command Palette
+  [12.00, 260, 26, 0.80],  // State 12: Toast
+  [13.00, 180, 24, 0.82],  // Loop return to Button
+];
+
+const heightSteps = [
+  [0.00,   52, 24, 0.82],  // Button
+  [0.50,   52, 26, 0.80],  // Loader
+  [1.00,   44, 28, 0.78],  // Check
+  [1.50,   34, 26, 0.82],  // Notch
+  [2.00,   96, 24, 0.80],  // Music Player
+  [3.00,   96, 24, 0.80],  // Scrub
+  [4.00,   44, 26, 0.82],  // Volume
+  [5.50,   38, 28, 0.80],  // Toggle
+  [6.50,   46, 26, 0.82],  // Tabs
+  [8.00,  240, 24, 0.80],  // Data Chart
+  [10.00,  54, 26, 0.82],  // Palette
+  [12.00,  44, 26, 0.80],  // Toast
+  [13.00,  52, 24, 0.82],  // Loop return to Button
+];
+
+const radiusSteps = [
+  [0.00,   26, 24, 0.82],  // Button (capsule)
+  [0.50,   26, 26, 0.80],  // Loader (circle)
+  [1.00,   22, 28, 0.78],  // Check
+  [1.50,   18, 26, 0.82],  // Notch (Apple squircle)
+  [2.00,   28, 24, 0.80],  // Player
+  [3.00,   28, 24, 0.80],  // Scrub
+  [4.00,   22, 26, 0.82],  // Volume
+  [5.50,   19, 28, 0.80],  // Toggle
+  [6.50,   14, 26, 0.82],  // Tabs
+  [8.00,   20, 24, 0.80],  // Chart
+  [10.00,  16, 26, 0.82],  // Palette
+  [12.00,  22, 26, 0.80],  // Toast
+  [13.00,  26, 24, 0.82],  // Loop return to Button
+];
+
+// Position offsets (Y position of container center)
+const posYSteps = [
+  [0.00,  720, 24, 0.82],  // Button centered
+  [0.50,  720, 26, 0.80],  // Loader centered
+  [1.00,  720, 28, 0.78],  // Check centered
+  [1.50,  540, 26, 0.82],  // Notch moves towards top display bezel
+  [2.00,  570, 24, 0.80],  // Expanded Player
+  [3.00,  570, 24, 0.80],  // Scrub
+  [4.00,  720, 26, 0.82],  // Volume returns to center
+  [5.50,  720, 28, 0.80],  // Toggle
+  [6.50,  720, 26, 0.82],  // Tabs
+  [8.00,  720, 24, 0.80],  // Chart
+  [10.00, 720, 26, 0.82],  // Palette
+  [12.00, 680, 26, 0.80],  // Toast floating
+  [13.00, 720, 24, 0.82],  // Button centered
+];
+
+// Camera zoom scale keyframes
+const cameraZoomSteps = [
+  [0.00,  1.00, 24, 0.82],
+  [0.50,  1.20, 26, 0.80],  // Zoom into loader
+  [1.00,  1.12, 28, 0.78],
+  [1.50,  0.92, 26, 0.82],  // Pan/zoom for notch
+  [2.00,  1.00, 24, 0.80],
+  [3.00,  1.14, 24, 0.80],  // Zoom into scrub
+  [4.00,  1.08, 26, 0.82],
+  [5.50,  1.28, 28, 0.80],  // Zoom into toggle
+  [6.50,  1.04, 26, 0.82],
+  [8.00,  0.94, 24, 0.80],  // Zoom out for chart
+  [10.00, 1.02, 26, 0.82],
+  [12.00, 1.12, 26, 0.80],
+  [13.00, 1.00, 24, 0.82],
+];
+
+// =========================================================================
+// 3. CURSOR DIRECT MANIPULATION CHOREOGRAPHY
+// =========================================================================
+
+// Cursor target positions: [time, x, y, isClickDown]
+const cursorWaypoints = [
+  // Beat 1 (0.0): Click button
+  { t: 0.00, x: 720, y: 720, down: true },
+  { t: 0.15, x: 720, y: 720, down: false },
+
+  // Beat 2-4: Cursor hovers out to right
+  { t: 0.80, x: 800, y: 660, down: false },
+  { t: 1.40, x: 740, y: 550, down: false },
+
+  // Beat 6 (2.5): Click play/pause button at (860, 560)
+  { t: 2.35, x: 875, y: 550, down: false },
+  { t: 2.50, x: 875, y: 550, down: true },
+  { t: 2.65, x: 875, y: 550, down: false },
+
+  // Beat 7-8 (3.0 - 3.4): Direct manipulation drag on scrubber
+  { t: 2.95, x: 620, y: 602, down: false },
+  { t: 3.00, x: 620, y: 602, down: true },  // Grab scrub thumb
+  { t: 3.40, x: 820, y: 602, down: true },  // Drag thumb to 75%
+  { t: 3.48, x: 820, y: 602, down: false }, // Release
+
+  // Beat 9-11 (4.2 - 4.9): Direct manipulation drag on volume slider past max
+  { t: 4.15, x: 780, y: 720, down: false },
+  { t: 4.25, x: 780, y: 720, down: true },  // Grab volume thumb
+  { t: 4.60, x: 885, y: 720, down: true },  // Drag past max (stretch)
+  { t: 4.85, x: 830, y: 720, down: true },
+  { t: 4.92, x: 830, y: 720, down: false }, // Release
+
+  // Beat 13 (6.0): Click toggle at (740, 720)
+  { t: 5.90, x: 740, y: 720, down: false },
+  { t: 6.00, x: 740, y: 720, down: true },
+  { t: 6.15, x: 740, y: 720, down: false },
+
+  // Beat 15 (7.0): Click Tab 2 (Metrics)
+  { t: 6.90, x: 720, y: 720, down: false },
+  { t: 7.00, x: 720, y: 720, down: true },
+  { t: 7.12, x: 720, y: 720, down: false },
+
+  // Beat 16 (7.5): Click Tab 3 (Logs)
+  { t: 7.42, x: 820, y: 720, down: false },
+  { t: 7.50, x: 820, y: 720, down: true },
+  { t: 7.62, x: 820, y: 720, down: false },
+
+  // Beat 19 (9.0): Hover chart peak point at (815, 665)
+  { t: 8.85, x: 815, y: 665, down: false },
+  { t: 9.25, x: 815, y: 665, down: false },
+
+  // Beat 24 (11.5): Enter pressed (cursor rests nearby)
+  { t: 10.40, x: 860, y: 720, down: false },
+  { t: 11.50, x: 860, y: 720, down: false },
+
+  // Loop back: Cursor glides smoothly back to initial state (720, 720) at t=14.0
+  { t: 13.00, x: 760, y: 740, down: false },
+  { t: 13.90, x: 720, y: 720, down: false },
+  { t: 14.00, x: 720, y: 720, down: true }, // Exactly matches t=0.00
+];
+
+function sampleCursor(t) {
+  t = ((t % DURATION) + DURATION) % DURATION;
+  let p0 = cursorWaypoints[0];
+  let p1 = cursorWaypoints[cursorWaypoints.length - 1];
+
+  for (let i = 0; i < cursorWaypoints.length - 1; i++) {
+    if (t >= cursorWaypoints[i].t && t <= cursorWaypoints[i + 1].t) {
+      p0 = cursorWaypoints[i];
+      p1 = cursorWaypoints[i + 1];
+      break;
+    }
+  }
+
+  const dt = p1.t - p0.t;
+  const progress = dt > 0 ? (t - p0.t) / dt : 0;
+  // Smooth cubic ease for cursor motion between interaction points
+  const ease = progress * progress * (3 - 2 * progress);
+
+  return {
+    x: lerp(p0.x, p1.x, ease),
+    y: lerp(p0.y, p1.y, ease),
+    down: progress < 0.6 ? p0.down : p1.down,
+  };
+}
+
+// =========================================================================
+// 4. CONTENT ENTER / EXIT FADE WITH SHORT BLUR
+// =========================================================================
+
+// State activation time windows [enterStart, enterEnd, exitStart, exitEnd]
+const stateWindows = {
+  button:   [ -0.2,  0.1,  0.42, 0.50 ],
+  loader:   [ 0.48,  0.54, 0.92, 1.00 ],
+  check:    [ 0.98,  1.05, 1.42, 1.50 ],
+  island:   [ 1.48,  1.56, 1.92, 2.00 ],
+  player:   [ 1.98,  2.06, 3.92, 4.00 ],
+  volume:   [ 3.98,  4.06, 5.42, 5.50 ],
+  toggle:   [ 5.48,  5.56, 6.42, 6.50 ],
+  tabs:     [ 6.48,  6.56, 7.92, 8.00 ],
+  chart:    [ 7.98,  8.08, 9.90, 10.00 ],
+  palette:  [ 9.98,  10.08, 11.90, 12.00 ],
+  toast:    [ 11.98, 12.06, 12.92, 13.00 ],
+  buttonEnd:[ 12.95, 13.10, 14.10, 14.20 ],
+};
+
+function getContentOpacityAndBlur(t, [es, ee, xs, xe]) {
+  if (t < es || t > xe) return { opacity: 0, blur: 8, scale: 0.95 };
+  if (t >= ee && t <= xs) return { opacity: 1, blur: 0, scale: 1.0 };
+  if (t < ee) {
+    const p = (t - es) / (ee - es);
+    return { opacity: p, blur: (1 - p) * 6, scale: 0.95 + 0.05 * p };
+  } else {
+    const p = (t - xs) / (xe - xs);
+    return { opacity: 1 - p, blur: p * 6, scale: 1.0 - 0.04 * p };
+  }
+}
+
+// =========================================================================
+// 5. ASYMMETRIC DUAL-SPRING LIQUID PHYSICS (Tabs & Toggle Knob)
+// =========================================================================
+
+function computeToggleKnob(t) {
+  // Knobs left edge moves at t=6.0
+  const isFlipped = t >= 6.0 && t < 6.5;
+  if (t < 5.5 || t > 6.5) return { x: 3, w: 32 };
+  
+  // Dual spring: leading edge faster, trailing edge slower
+  const sLead = springStep(t - 6.00, 28, 0.72);
+  const sTrail = springStep(t - 6.00, 18, 0.86);
+
+  const left = 3 + sTrail * 30;
+  const right = 35 + sLead * 30;
+  return { x: left, w: Math.max(32, right - left) };
+}
+
+function computeLiquidTabs(t) {
+  if (t < 6.5 || t > 8.0) return { x: 4, w: 100 };
+  
+  // Moves to Tab 2 at 7.0, Tab 3 at 7.5
+  let targetIdx = 0;
+  let sLead = 0;
+  let sTrail = 0;
+
+  if (t >= 7.5) {
+    sLead = springStep(t - 7.5, 26, 0.70);
+    sTrail = springStep(t - 7.5, 17, 0.84);
+    const left = 108 + sTrail * 104;
+    const right = 212 + sLead * 104;
+    return { x: left, w: Math.max(98, right - left) };
+  } else if (t >= 7.0) {
+    sLead = springStep(t - 7.0, 26, 0.70);
+    sTrail = springStep(t - 7.0, 17, 0.84);
+    const left = 4 + sTrail * 104;
+    const right = 104 + sLead * 108;
+    return { x: left, w: Math.max(98, right - left) };
+  } else {
+    return { x: 4, w: 100 };
+  }
+}
+
+// =========================================================================
+// 6. MAIN TIME SEEK FUNCTION: seek(t)
+// =========================================================================
+
+const stage = document.getElementById('stage');
+const camera = document.getElementById('camera');
+const morphContainer = document.getElementById('morph-container');
+const notchEars = document.getElementById('notch-ears');
+const cursor = document.getElementById('cursor');
+
+// Content views
+const views = {
+  button:   document.getElementById('view-button'),
+  loader:   document.getElementById('view-loader'),
+  check:    document.getElementById('view-check'),
+  island:   document.getElementById('view-island'),
+  player:   document.getElementById('view-player'),
+  volume:   document.getElementById('view-volume'),
+  toggle:   document.getElementById('view-toggle'),
+  tabs:     document.getElementById('view-tabs'),
+  chart:    document.getElementById('view-chart'),
+  palette:  document.getElementById('view-palette'),
+  toast:    document.getElementById('view-toast'),
+};
+
+// Interactive elements
+const loaderRing = document.getElementById('loader-ring');
+const playPauseSvg = document.getElementById('play-pause-svg');
+const scrubFill = document.getElementById('scrub-fill');
+const scrubThumb = document.getElementById('scrub-thumb');
+const scrubTime = document.getElementById('player-cur-time');
+const volFill = document.getElementById('vol-fill');
+const volThumb = document.getElementById('vol-thumb');
+const toggleKnob = document.getElementById('toggle-knob');
+const tabIndicator = document.getElementById('tab-indicator');
+const chartPathLine = document.getElementById('chart-path-line');
+const chartTooltip = document.getElementById('chart-tooltip');
+const paletteQuery = document.getElementById('palette-query');
+const paletteCursor = document.getElementById('palette-cursor');
+
+// HUD
+const hudTime = document.getElementById('hud-time');
+const hudBeat = document.getElementById('hud-beat');
+const hudBar = document.getElementById('hud-bar');
+
+function seek(t) {
+  // Wrap cleanly into [0, DURATION)
+  t = ((t % DURATION) + DURATION) % DURATION;
+
+  // 1. Compute Container Morph Geometry
+  const w = springSeries(t, 180, widthSteps);
+  const h = springSeries(t, 52, heightSteps);
+  const r = springSeries(t, 26, radiusSteps);
+  const posY = springSeries(t, 720, posYSteps);
+  const posX = 720;
+
+  morphContainer.style.width = `${w}px`;
+  morphContainer.style.height = `${h}px`;
+  morphContainer.style.borderRadius = `${r}px`;
+  morphContainer.style.transform = `translate(${posX - w / 2}px, ${posY - h / 2}px)`;
+
+  // Dynamic Island top ears visibility
+  const earsActive = t >= 1.48 && t <= 1.95;
+  notchEars.style.opacity = earsActive ? '1' : '0';
+
+  // 2. Camera Framing & Scale
+  const zoom = springSeries(t, 1.0, cameraZoomSteps);
+  const camY = lerp(720, posY, 0.45);
+  camera.style.transform = `translate(720px, 720px) scale(${zoom}) translate(-720px, -${camY}px)`;
+
+  // 3. Cursor Position and Direct Manipulation
+  const cur = sampleCursor(t);
+  cursor.style.transform = `translate(${cur.x}px, ${cur.y}px) scale(${cur.down ? 0.88 : 1.0})`;
+
+  // 4. Content State Opacity and Blur
+  for (const [key, el] of Object.entries(views)) {
+    let win = stateWindows[key];
+    if (key === 'button' && t >= 12.95) {
+      win = stateWindows.buttonEnd;
+    }
+    const { opacity, blur, scale } = getContentOpacityAndBlur(t, win);
+    el.style.opacity = opacity;
+    el.style.filter = `blur(${blur}px)`;
+    el.style.transform = `scale(${scale})`;
+  }
+
+  // 5. Individual State Choreographies
+
+  // State 2: Loader circular sweep
+  if (t >= 0.50 && t <= 1.00) {
+    const sweep = (t - 0.50) / 0.50;
+    loaderRing.style.strokeDashoffset = `${60 - sweep * 55}`;
+    loaderRing.style.transform = `rotate(${sweep * 360}deg)`;
+  }
+
+  // State 5 & 6: Music Play/Pause morph & Scrubber drag
+  if (t >= 2.00 && t <= 4.00) {
+    // Play/Pause icon morph on Beat 6 (t=2.5)
+    const isPaused = t >= 2.50;
+    playPauseSvg.innerHTML = isPaused
+      ? `<rect x="6" y="4" width="4" height="16" fill="white" /><rect x="14" y="4" width="4" height="16" fill="white" />`
+      : `<polygon points="6,4 20,12 6,20" fill="white" />`;
+
+    // Direct manipulation scrub between 3.0 and 3.4
+    let scrubProg = 0.28;
+    if (t >= 3.00 && t <= 3.40) {
+      scrubProg = 0.28 + ((t - 3.00) / 0.40) * 0.48; // Drags to 76%
+    } else if (t > 3.40) {
+      scrubProg = 0.76;
+    }
+    scrubFill.style.width = `${scrubProg * 100}%`;
+    scrubThumb.style.left = `${scrubProg * 100}%`;
+    const curSec = Math.floor(scrubProg * 220);
+    const m = Math.floor(curSec / 60);
+    const s = String(curSec % 60).padStart(2, '0');
+    scrubTime.innerText = `${m}:${s}`;
+  }
+
+  // State 7: Volume Slider direct manipulation & rubber-band stretch past max
+  if (t >= 4.00 && t <= 5.50) {
+    let volProg = 0.65;
+    if (t >= 4.25 && t <= 4.60) {
+      // Drag past 100% max
+      volProg = 0.65 + ((t - 4.25) / 0.35) * 0.50; // Reaches 1.15 (115% stretch)
+    } else if (t > 4.60 && t < 4.90) {
+      volProg = 1.15;
+    } else if (t >= 4.90) {
+      // Snap recoil back to 85%
+      volProg = 0.85 + 0.30 * Math.exp(-14 * (t - 4.90)) * Math.cos(22 * (t - 4.90));
+    }
+    const clampedProg = Math.min(1.0, volProg);
+    volFill.style.width = `${clampedProg * 100}%`;
+    volThumb.style.left = `${clampedProg * 100}%`;
+  }
+
+  // State 8: Toggle liquid asymmetric dual-spring
+  if (t >= 5.50 && t <= 6.50) {
+    const knob = computeToggleKnob(t);
+    toggleKnob.style.left = `${knob.x}px`;
+    toggleKnob.style.width = `${knob.w}px`;
+  }
+
+  // State 9: Liquid Tabs asymmetric dual-spring
+  if (t >= 6.50 && t <= 8.00) {
+    const tab = computeLiquidTabs(t);
+    tabIndicator.style.left = `${tab.x}px`;
+    tabIndicator.style.width = `${tab.w}px`;
+  }
+
+  // State 10: Vector Chart draw & Tooltip hover pop
+  if (t >= 8.00 && t <= 10.00) {
+    const drawProg = clamp((t - 8.20) / 0.70, 0, 1);
+    const totalLen = 420;
+    chartPathLine.style.strokeDasharray = `${totalLen}`;
+    chartPathLine.style.strokeDashoffset = `${totalLen * (1 - drawProg)}`;
+
+    // Tooltip pops up when hovered around Beat 19 (9.0s)
+    const tooltipActive = t >= 8.90 && t <= 9.60;
+    if (tooltipActive) {
+      const pop = springStep(t - 8.90, 24, 0.75);
+      chartTooltip.style.opacity = '1';
+      chartTooltip.style.left = '310px';
+      chartTooltip.style.top = '20px';
+      chartTooltip.style.transform = `translate(-50%, -100%) translateY(${-8 * pop}px) scale(${pop})`;
+    } else {
+      chartTooltip.style.opacity = '0';
+    }
+  }
+
+  // State 11: ⌘K Type-to-filter
+  if (t >= 10.00 && t <= 12.00) {
+    const fullQuery = "export assets";
+    const typeProg = clamp((t - 10.40) / 0.70, 0, 1);
+    const chars = Math.floor(typeProg * fullQuery.length);
+    paletteQuery.innerText = fullQuery.substring(0, chars);
+    // Cursor blink
+    paletteCursor.style.opacity = Math.floor((t * 4)) % 2 === 0 ? '1' : '0';
+  }
+
+  // 6. HUD updates
+  hudTime.innerText = `${t.toFixed(2)}s`;
+  const curBeat = Math.floor(t / 0.5) + 1;
+  hudBeat.innerText = curBeat;
+  hudBar.innerText = Math.floor((curBeat - 1) / 4) + 1;
+}
+
+// Expose seek globally for Playwright headless rendering
+window.seek = seek;
+
+// =========================================================================
+// 7. REALTIME PLAYBACK & THEME CONTROLS
+// =========================================================================
+
+let isPlaying = true;
+let startTime = performance.now();
+let manualTime = 0;
+
+function loop(now) {
+  if (isPlaying) {
+    const elapsed = (now - startTime) / 1000.0;
+    manualTime = elapsed % DURATION;
+  }
+  seek(manualTime);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// Play / Pause toggle
+const btnPlay = document.getElementById('btn-play');
+function togglePlay() {
+  isPlaying = !isPlaying;
+  btnPlay.innerText = isPlaying ? 'Pause (Space)' : 'Play (Space)';
+  if (isPlaying) {
+    startTime = performance.now() - manualTime * 1000.0;
+  }
+}
+btnPlay.addEventListener('click', togglePlay);
+
+// Theme Toggle (Dark / Light)
+const btnTheme = document.getElementById('btn-toggle-theme');
+function toggleTheme() {
+  document.body.classList.toggle('theme-light');
+}
+btnTheme.addEventListener('click', toggleTheme);
+
+// Keyboard shortcuts
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    togglePlay();
+  } else if (e.key === 't' || e.key === 'T' || e.key === 'd' || e.key === 'D') {
+    toggleTheme();
+  }
+});
+
+// Check URL query parameters for mode: ?theme=light or ?theme=dark
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('theme') === 'light') {
+  document.body.classList.add('theme-light');
+}
+</script>
+
+</body>
+</html>

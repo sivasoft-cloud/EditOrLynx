@@ -1,0 +1,19 @@
+{
+  "name": "editorlynx-prokey-server",
+  "version": "1.0.0",
+  "description": "Public Pro Key Claim Site & Admin Control Center for Edit.or.lynx macOS App",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "deploy": "wrangler deploy"
+  },
+  "keywords": [
+    "macOS",
+    "license-server",
+    "editorlynx",
+    "pro-keys"
+  ],
+  "author": "edit.or.siva",
+  "license": "MIT"
+}

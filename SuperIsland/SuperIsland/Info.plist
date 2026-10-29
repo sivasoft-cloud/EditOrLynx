@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
+    <key>CFBundleName</key>
+    <string>$(PRODUCT_NAME)</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$(MARKETING_VERSION)</string>
+    <key>CFBundleVersion</key>
+    <string>$(CURRENT_PROJECT_VERSION)</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.editor.lynx.oauth</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>editorlynx</string>
+                <string>superisland</string>
+            </array>
+        </dict>
+    </array>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSCalendarsFullAccessUsageDescription</key>
+    <string>Edit.or.lynx needs calendar access to show upcoming events.</string>
+    <key>NSCalendarsUsageDescription</key>
+    <string>Edit.or.lynx needs calendar access to show upcoming events.</string>
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>Edit.or.lynx needs Bluetooth access to show connected device notifications.</string>
+    <key>NSLocationUsageDescription</key>
+    <string>Edit.or.lynx needs location access for weather information.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Edit.or.lynx needs location access for weather information.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Edit.or.lynx needs location access for weather information.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Edit.or.lynx needs microphone access for audio visualization and Teleprompter word tracking.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>Edit.or.lynx uses speech recognition to follow along with Teleprompter scripts as you read.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>Edit.or.lynx needs automation access to detect currently playing media in browsers and music apps.</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 Edit.or.lynx. All rights reserved.</string>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+</dict>
+</plist>

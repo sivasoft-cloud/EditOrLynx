@@ -1,0 +1,250 @@
+:root {
+  color-scheme: dark;
+  --bg: #131316;
+  --panel: #1c1c21;
+  --panel-2: #232329;
+  --text: #f3f3f5;
+  --secondary: #a4a4ad;
+  --tertiary: #71717a;
+  --stroke: rgba(255, 255, 255, 0.09);
+  --accent: #0a84ff;
+  --green: #30d158;
+  --red: #ff453a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 292px;
+  margin: 0;
+  padding: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: 12px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding-bottom: 12px;
+  border-bottom: 0.5px solid var(--stroke);
+}
+
+.mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.94);
+  background: linear-gradient(180deg, #4a4e57, #272a2f 60%, #1b1d21);
+  border: 0.5px solid rgba(255, 255, 255, 0.14);
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.titles strong {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.titles span {
+  font-size: 10px;
+  color: var(--tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dot {
+  margin-left: auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tertiary);
+}
+
+.dot.on {
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(48, 209, 88, 0.55);
+}
+
+.dot.off {
+  background: var(--red);
+}
+
+.actions {
+  display: grid;
+  gap: 7px;
+  padding: 12px 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+}
+
+#page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+#page:hover {
+  filter: brightness(1.08);
+}
+
+#page:active {
+  transform: scale(0.985);
+}
+
+#page kbd {
+  font: 9px/1 "SF Mono", ui-monospace, monospace;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.18);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+#clip {
+  height: 30px;
+  border-radius: 9px;
+  background: var(--panel-2);
+  border: 0.5px solid var(--stroke);
+  color: var(--text);
+  font-weight: 500;
+}
+
+#clip:hover {
+  background: #2a2a31;
+}
+
+.link {
+  display: flex;
+  gap: 6px;
+  padding-bottom: 12px;
+}
+
+#url {
+  flex: 1;
+  height: 30px;
+  padding: 0 9px;
+  border-radius: 8px;
+  border: 0.5px solid var(--stroke);
+  background: #0c0c0f;
+  color: var(--text);
+  font: 11px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+  outline: none;
+}
+
+#url::placeholder {
+  color: var(--tertiary);
+}
+
+#url:focus {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+#send {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border: 0.5px solid var(--stroke);
+  color: var(--secondary);
+  font-size: 13px;
+}
+
+#send:hover {
+  color: var(--text);
+}
+
+.toggle {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 10px;
+  border-radius: 9px;
+  background: var(--panel);
+  border: 0.5px solid var(--stroke);
+  cursor: pointer;
+}
+
+.toggle input {
+  appearance: none;
+  width: 30px;
+  height: 18px;
+  margin: 1px 0 0;
+  border-radius: 999px;
+  background: #3a3a42;
+  position: relative;
+  flex: none;
+  transition: background 140ms ease;
+}
+
+.toggle input::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 140ms ease;
+}
+
+.toggle input:checked {
+  background: var(--accent);
+}
+
+.toggle input:checked::after {
+  transform: translateX(12px);
+}
+
+.toggle span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle strong {
+  font-size: 11px;
+  font-weight: 550;
+}
+
+.toggle em {
+  font-style: normal;
+  font-size: 9.5px;
+  color: var(--tertiary);
+  line-height: 1.35;
+}
+
+footer {
+  padding-top: 10px;
+  font-size: 9.5px;
+  color: var(--tertiary);
+}
+
+#hint.error {
+  color: var(--red);
+}
