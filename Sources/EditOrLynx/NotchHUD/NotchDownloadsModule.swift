@@ -8,19 +8,49 @@ public struct NotchDownloadsModule: View {
             let active = Array(engine.activeDownloads.values.filter { $0.state.isActive }.prefix(2))
 
             if active.isEmpty {
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     Image(systemName: "arrow.down.circle")
-                        .font(.system(size: 20))
+                        .font(.system(size: 22))
                         .foregroundStyle(Color.white.opacity(0.35))
                     Text("No Active Downloads")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Color.white.opacity(0.5))
+
+                    Button {
+                        MainWindowController.shared.show()
+                        NotchWindowController.shared.collapse()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "macwindow.on.rectangle")
+                            Text("Open Downloader")
+                        }
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.white.opacity(0.08), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ForEach(active) { item in
                     downloadRow(item)
                 }
+
+                Button {
+                    MainWindowController.shared.show()
+                    NotchWindowController.shared.collapse()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "macwindow.on.rectangle")
+                        Text("Open Full Dashboard")
+                    }
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.vertical, 2)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 16)

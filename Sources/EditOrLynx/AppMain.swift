@@ -6,13 +6,16 @@ struct EditOrLynxApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        WindowGroup {
-            MainWindowView()
-                .environmentObject(DownloadEngine.shared)
-                .frame(minWidth: 680, minHeight: 480)
+        Settings {
+            SettingsView()
         }
-        .windowStyle(.hiddenTitleBar)
         .commands {
+            CommandGroup(replacing: .newItem) {
+                Button("Show Downloader Window") {
+                    MainWindowController.shared.show()
+                }
+                .keyboardShortcut("o", modifiers: .command)
+            }
             CommandGroup(replacing: .appInfo) {
                 Button("About Edit.or.lynx") {
                     SettingsWindowController.shared.show()
@@ -39,6 +42,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 2. Initialize Browser Bridge
         BrowserBridge.shared.onDownloadRequested = { url, customFilename in
             _ = DownloadEngine.shared.startDownload(url: url, customFilename: customFilename)
+            MainWindowController.shared.show()
         }
 
         // 3. Initialize Clipboard Monitor
@@ -46,6 +50,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 4. Setup Status Item (Menu Bar Icon)
         setupStatusBar()
+
+        // 5. Open Download Manager Window immediately on launch
+        MainWindowController.shared.show()
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        MainWindowController.shared.show()
+        return true
     }
 
     private func setupStatusBar() {
@@ -67,10 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showMainWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { !($0 is NotchPanel) }) {
-            window.makeKeyAndOrderFront(nil)
-        }
+        MainWindowController.shared.show()
     }
 
     @objc private func toggleNotch() {

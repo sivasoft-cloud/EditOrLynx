@@ -19,12 +19,13 @@ public struct MainWindowView: View {
             HStack(spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: "bolt.horizontal.circle.fill")
-                        .font(.system(size: 20))
+                        .font(.system(size: 18))
                         .foregroundStyle(AppTheme.accent)
                     Text("Edit.or.lynx")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(AppTheme.textPrimary)
                 }
+                .padding(.leading, 64)
 
                 Spacer()
 

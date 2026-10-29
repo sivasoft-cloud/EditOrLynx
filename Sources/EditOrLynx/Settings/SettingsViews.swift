@@ -167,6 +167,17 @@ public struct DownloaderSettingsPane: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 14) {
+            SettingsGroup(title: "Download Manager Window") {
+                SWButtonRow(
+                    title: "Main Dashboard",
+                    subtitle: "Open the primary downloads management window with task queues and controls.",
+                    buttonTitle: "Open Dashboard",
+                    icon: "macwindow.on.rectangle"
+                ) {
+                    MainWindowController.shared.show()
+                }
+            }
+
             SettingsGroup(title: "Turbo Engine Connections") {
                 SWSliderRow(
                     title: "Max Connections per Task",
